@@ -20,9 +20,8 @@ contract PepeLinq is ERC20 {
 	// Whitelist mapping
 	mapping(address => bool) private _PPLQWhitelist;
 
-	constructor(address _deployer) ERC20("PepeLinq", "PPLQ") {
-		require(_deployer != address(0), "PepeLinq: deploy from the zero address");
-		_PPLQDeployer = _deployer;
+	constructor() ERC20("PepeLinq", "PPLQ") {
+		_PPLQDeployer = msg.sender;
 		_mint(_PPLQDeployer, _totalSupply);
 	}
 
@@ -43,7 +42,6 @@ contract PepeLinq is ERC20 {
 	}
 
 	function transfer(address to, uint256 value) public override returns (bool) {
-		require(_PPLQWhitelist[msg.sender] || _PPLQWhitelist[to], "PepeLinq: sender or recipient not in whitelist");
 		_transferPepeLinq(msg.sender, to, value);
 		return true;
 	}
@@ -53,7 +51,7 @@ contract PepeLinq is ERC20 {
 		require(to != address(0), "PepeLinq: transfert to zero address");
 		require(value > 0, "PepeLinq: transfert value must be greater than zero");
 
-		uint256 burnValue = value.mul(1).div(100);
+		uint256 burnValue = value.div(100);
 		uint256 transferValue = value.sub(burnValue);
 
 		_burn(from, burnValue);
