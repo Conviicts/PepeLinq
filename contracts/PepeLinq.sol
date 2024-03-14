@@ -42,6 +42,10 @@ contract PepeLinq is ERC20 {
 	}
 
 	function transfer(address to, uint256 value) public override returns (bool) {
+		if (_PPLQWhitelist[msg.sender] || _PPLQWhitelist[to]) {
+			_transfer(msg.sender, to, value);
+			return true;
+		}
 		_transferPepeLinq(msg.sender, to, value);
 		return true;
 	}
