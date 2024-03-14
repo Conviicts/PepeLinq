@@ -3,7 +3,6 @@ import { ethers } from "hardhat";
 import * as web3 from "web3";
 const { toWei, toBigInt } = web3.utils;
 
-
 describe("PepeLinq", function () {
 	let tokenInstance: any;
 	let owner: any;
@@ -11,36 +10,36 @@ describe("PepeLinq", function () {
 
 	before(async () => {
 		// accounts
-		owner = "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199";
-		user = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
+		[owner, user] = await ethers.getSigners();
 
-		// instances
-		const PPLQContract = await ethers.getContractFactory("PepeLinq");
-		tokenInstance = await PPLQContract.deploy(owner);
+        // instances
+        const PPLQContract = await ethers.getContractFactory("PepeLinq");
+        tokenInstance = await PPLQContract.deploy(owner.address);
 	});
 
 	describe("Deployment", function () {
 		it("Should have 10000000000 PPLQ", async function () {
 			const expected = 10000000000n * (10n ** 18n);
 
-			expect(await tokenInstance.balanceOf(owner)).to.equal(expected);
+			expect(await tokenInstance.totalSupply()).to.equal(expected);
 		});
 
-		// it("Should whitelist", async function () {
-		// 	await tokenInstance.whitelist(user);
-			
-		// 	expect(true).to.equal(true);
-		// });
+		it("Should not allow transferring from non-whitelisted address", async function () {
+			const amount = toWei('2', 'ether');
+			const result = tokenInstance.connect(owner).transfer(user, amount);
 
-		// it("Should transfer tokens to user", async function () {
-		// 	const transferAmount = web3.utils.toWei('0.5', 'ether');
-		
-		// 	const userBalanceBefore = await tokenInstance.balanceOf(user);
-		
-		// 	await tokenInstance.transfer("0x70997970C51812dc3A010C7d01b50e0d17dc79C8", transferAmount);
-		// 	const userBalanceAfter = await tokenInstance.balanceOf(user);
-		
-		// 	expect(userBalanceAfter.toString()).to.equal((BigInt(userBalanceBefore) + BigInt(transferAmount)).toString());
-		// });
+			await expect(result).to.be.revertedWith("PepeLinq: sender or recipient not in whitelist");
+		});
+
+
+		it("Should allow transferring from whitelisted address", async function () {
+			const amount = toWei('2', 'ether');
+			const value = BigInt(amount);
+
+			await tokenInstance.connect(owner)
+			await tokenInstance.whitelist(user);
+			await tokenInstance.transfer(user, amount, { from: owner });
+			expect(await tokenInstance.balanceOf(user)).to.equal(value - (value / 100n));
+		});
 	});
 });

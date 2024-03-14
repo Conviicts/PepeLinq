@@ -27,7 +27,7 @@ contract PepeLinq is ERC20 {
 	}
 
 	modifier onlyOwner {
-		require(msg.sender != _PPLQDeployer, "FORBIDDEN");
+		require(msg.sender == _PPLQDeployer, "FORBIDDEN");
 		_;
 	}
 
